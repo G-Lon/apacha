@@ -1,24 +1,39 @@
+// 引入模块
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
 
-let rootPath = path.join(__dirname,'www');
+// 第三方模块 mime可以将文件类型转换成mime类型
+const mime = require('mime');
 
-let server = http.createServer((request,response)=>{
-    response.setHeader('content-type','text/html;charset=utf-8');
+// 文件路径的拼接
+let rootPath = path.join(__dirname, 'www');
+
+let server = http.createServer((request, response) => {
+    // response.setHeader('content-type', 'text/html;charset=utf-8');
     // 生成用户请求的地址
-    let targetPath = path.join(rootPath,request.url);
+    let targetPath = path.join(rootPath, request.url);
     // 判断请求的路径是否存在
-    if(fs.existsSync(targetPath)){
+    if (fs.existsSync(targetPath)) {
         // 存在
-        let stats = fs.stat(targetPath,(err,stats)=>{
-            if(stats){
-               
+        fs.stat(targetPath, (err, stats) => {
+            // 判断是不是文件
+            if (stats.isFile()) {
+                // console.log( mime.getType(targetPath))
+                // 使用mime类型
+                response.setHeader('content-type',mime.getType(targetPath))
+                fs.readFile(targetPath,(err,data)=>{
+                    response.end(data);
+                })
             }
-            response.end('exist');
+
+            if(stats.isDirectory()){
+                response.end(`
+                    
+                `)
+            }
         });
-        
-    }else {
+    } else {
         // 不存在
         response.statusCode = 404;
         response.end(`
@@ -34,6 +49,6 @@ let server = http.createServer((request,response)=>{
     // response.end('hello world');
 })
 
-server.listen(3000,'127.0.0.1',()=>{
+server.listen(3000, '127.0.0.1', () => {
     console.log('监听成功！')
 })
